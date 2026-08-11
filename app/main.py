@@ -13,7 +13,8 @@ from .metrics import record_error, snapshot
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
-from .tracing import tracing_enabled
+from .tracing import flush as flush_traces
+from .tracing import get_langfuse_client, init_tracing, tracing_enabled
 
 configure_logging()
 log = get_logger()
@@ -24,12 +25,29 @@ agent = LabAgent()
 
 @app.on_event("startup")
 async def startup() -> None:
+    # Phải chạy trước request đầu tiên: client Langfuse chỉ nhận mask PII ở lần
+    # khởi tạo đầu, mà @observe sẽ tự khởi tạo một client không mask nếu nó chạy
+    # trước. Xem docstring của get_langfuse_client().
+    tracing_status = init_tracing()
     log.info(
         "app_started",
         service=os.getenv("APP_NAME", "day13-observability-lab"),
         env=os.getenv("APP_ENV", "dev"),
-        payload={"tracing_enabled": tracing_enabled()},
+        payload=tracing_status,
     )
+    if tracing_status["masking_active"] is False:
+        log.warning(
+            "tracing_masking_inactive",
+            service="control",
+            payload={"detail": "Langfuse client đã được khởi tạo trước khi gắn mask; trace có thể chứa PII"},
+        )
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    # Langfuse gom trace theo batch; không flush thì các trace cuối mất khi tắt API.
+    flush_traces(get_langfuse_client())
+    log.info("app_stopped", service=os.getenv("APP_NAME", "day13-observability-lab"))
 
 
 @app.get("/health")

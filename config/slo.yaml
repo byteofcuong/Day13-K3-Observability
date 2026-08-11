@@ -1,16 +1,48 @@
 service: day13-observability-lab
 window: 28d
+
+# objective = ngưỡng kỹ thuật; target = % thời gian phải nằm trong ngưỡng đó.
+# Các objective giữ đúng bằng threshold trong config/dashboard.yaml để dashboard,
+# SLO và alert cùng nói một con số — khác nhau là dấu hiệu contract đã lệch.
 slis:
   latency_p95_ms:
     objective: 3000
-    target: 99.5
-    note: Replace with your group's target
+    target: 99.0
+    error_budget_pct: 1.0
+    measured_from: response_sent.latency_ms
+    rationale: >-
+      Người dùng bỏ cuộc khi câu trả lời lâu hơn 3 giây, nên p95 3000ms là ngưỡng
+      cảm nhận được chứ không phải con số tùy chọn. Chọn target 99.0 thay vì 99.5
+      vì lab chạy trên máy cá nhân: một lần load test concurrency 5 cũng đủ đẩy
+      p95 lên, và 99.5 sẽ sinh báo động giả liên tục trong 4 giờ lab.
+
   error_rate_pct:
     objective: 2
     target: 99.0
+    error_budget_pct: 1.0
+    measured_from: request_failed / request_received
+    rationale: >-
+      Dưới 2% lỗi thì người dùng thử lại là xong; trên mức đó là hỏng có hệ thống.
+      Đây là SLI nghiêm nhất vì lỗi làm người dùng mất hẳn câu trả lời, khác với
+      latency chỉ làm họ phải chờ.
+
   daily_cost_usd:
     objective: 2.5
-    target: 100.0
+    target: 98.0
+    error_budget_pct: 2.0
+    measured_from: sum(response_sent.cost_usd) theo ngày
+    rationale: >-
+      Ngân sách 2.5 USD/ngày cho traffic của lab. Để target 98.0 chứ không phải
+      100 vì cost là chỉ tiêu ngân sách, không phải cam kết với người dùng: vượt
+      một ngày do chạy load test là chấp nhận được, vượt nhiều ngày liên tiếp mới
+      là vấn đề thật.
+
   quality_score_avg:
     objective: 0.75
     target: 95.0
+    error_budget_pct: 5.0
+    measured_from: mean(response_sent.quality_score)
+    rationale: >-
+      quality_score là proxy heuristic, không phải đánh giá của người dùng, nên
+      target lỏng nhất trong bốn SLI. Dùng để phát hiện sụt chất lượng đột ngột
+      (ví dụ rollback prompt sai) chứ không dùng để khẳng định chất lượng tuyệt đối.
