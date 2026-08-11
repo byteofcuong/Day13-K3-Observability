@@ -2,7 +2,7 @@
 
 ## 1. Thông tin nhóm
 
-- Tên nhóm: **K3 — Day13 Observability**
+- Tên nhóm: **Viet-Cuong-Hieu-Hung**
 - Repository URL: https://github.com/byteofcuong/Day13-K3-Observability
 - Commit SHA cuối: f825b6ce8ec7c64ac7ca665f71fc3f7879736d44
 - Thành viên và vai trò:
