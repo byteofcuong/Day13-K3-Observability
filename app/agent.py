@@ -17,6 +17,8 @@ from .tracing import (
     tracing_enabled,
 )
 
+from structlog.contextvars import get_contextvars
+
 
 @dataclass
 class AgentResult:
@@ -92,6 +94,19 @@ class LabAgent:
         quality_score = self._heuristic_quality(message, response.text, docs)
         latency_ms = int((time.perf_counter() - started) * 1000)
 
+        # correlation_id đến từ middleware qua contextvars. Đây là mắt xích nối
+        # trace trên Langfuse với log line trong data/logs.jsonl — thiếu nó thì
+        # luồng Metrics → Traces → Logs bị đứt ở đoạn cuối.
+        metadata = {
+            "prompt_name": prompt.name,
+            "prompt_label": prompt.label,
+            "prompt_version": prompt.version,
+            "prompt_source": prompt.source,
+        }
+        cid = get_contextvars().get("correlation_id")
+        if cid and cid != "MISSING":
+            metadata["correlation_id"] = cid
+
         langfuse_client.update_current_trace(
             name="chat-response",
             user_id=hash_user_id(user_id),
@@ -99,12 +114,7 @@ class LabAgent:
             tags=["lab", feature, self.model],
             input={"question": question_preview},
             output={"answer": summarize_text(response.text)},
-            metadata={
-                "prompt_name": prompt.name,
-                "prompt_label": prompt.label,
-                "prompt_version": prompt.version,
-                "prompt_source": prompt.source,
-            },
+            metadata=metadata,
         )
         score_current_trace(
             langfuse_client,
