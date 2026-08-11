@@ -15,6 +15,7 @@ from .tracing import (
     observe,
     score_current_trace,
     tracing_enabled,
+    update_current_span,
 )
 
 from structlog.contextvars import get_contextvars
@@ -107,6 +108,13 @@ class LabAgent:
         if cid and cid != "MISSING":
             metadata["correlation_id"] = cid
 
+        # Root observation cũng cần input/output riêng: giá trị đặt ở cấp trace
+        # không tự chảy xuống observation, mà dashboard/evaluator đọc ở đây.
+        update_current_span(
+            langfuse_client,
+            input={"question": question_preview},
+            output={"answer": summarize_text(response.text)},
+        )
         langfuse_client.update_current_trace(
             name="chat-response",
             user_id=hash_user_id(user_id),

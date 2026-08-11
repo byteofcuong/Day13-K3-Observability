@@ -71,6 +71,12 @@ def get_langfuse_client():
         return _client
 
     if LANGFUSE_SDK_AVAILABLE and tracing_enabled():
+        # Không set thì resourceAttributes của trace ghi service.name là
+        # "unknown_service" và không lọc được theo service khi nhiều app cùng
+        # bắn vào một project. Phải đặt trước khi TracerProvider được dựng.
+        os.environ.setdefault(
+            "OTEL_SERVICE_NAME", os.getenv("APP_NAME", "day13-observability-lab")
+        )
         _client = Langfuse(
             environment=os.getenv("APP_ENV", "dev"),
             release=os.getenv("APP_RELEASE") or None,
@@ -124,6 +130,18 @@ def child_generation(client: Any, *, name: str, **attributes: Any) -> Iterator[A
         return
     with start(name=name, **attributes) as generation:
         yield generation
+
+
+def update_current_span(client: Any, **attributes: Any) -> None:
+    """Gắn attribute lên observation hiện tại; no-op khi client không hỗ trợ.
+
+    Cần cho root span: input/output ở cấp trace không tự chảy xuống observation,
+    mà dashboard và evaluator lại đọc input/output của root observation.
+    """
+    update = getattr(client, "update_current_span", None)
+    if update is None:
+        return
+    update(**attributes)
 
 
 def score_current_trace(client: Any, *, name: str, value: float, **kwargs: Any) -> None:

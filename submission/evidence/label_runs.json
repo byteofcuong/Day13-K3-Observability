@@ -1,0 +1,27 @@
+[
+  {
+    "step": "A3 baseline (v1)",
+    "label": "baseline",
+    "correlation_id": "req-03d0388d"
+  },
+  {
+    "step": "A3 candidate (v2)",
+    "label": "candidate",
+    "correlation_id": "req-08a4edb3"
+  },
+  {
+    "step": "A4 truoc doi label",
+    "label": "production",
+    "correlation_id": "req-c95d8984"
+  },
+  {
+    "step": "A4 sau khi chuyen production->v2",
+    "label": "production",
+    "correlation_id": "req-7d177215"
+  },
+  {
+    "step": "A4 sau khi rollback ->v1",
+    "label": "production",
+    "correlation_id": "req-ff35072f"
+  }
+]
