@@ -50,6 +50,6 @@ Tiêu đề `## Alert 1/2/3` giữ nguyên để anchor `#alert-1/2/3` trong YAM
 
 ## Ghi chú khi bàn giao
 
-`owner` đang ghi theo **vai trò** trong nhóm. Trước khi nộp, đổi thành tên người thật để cột owner có nghĩa lúc chấm.
+Các alert trong `config/alert_rules.yaml` đã có owner là thành viên cụ thể của nhóm.
 
 Không có alert riêng cho `quality_score`: nó là proxy heuristic, và một alert dựa trên proxy sẽ tạo nhiều page giả hơn là phát hiện thật. Chỉ tiêu này vẫn có threshold trên dashboard và vẫn nằm trong `slo.yaml` để theo dõi xu hướng.

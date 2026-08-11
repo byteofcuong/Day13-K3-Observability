@@ -1,0 +1,21 @@
+{
+  "challenge_id": "day13-k3-observability-v1",
+  "filter": {
+    "feature": "refund",
+    "session_id": "k3-challenge-s03"
+  },
+  "trace_id": "e0a9f1d3c282aec1f7810c09976827e0",
+  "correlation_id": "req-fd08c5e6",
+  "request_latency_ms": 4101,
+  "abnormal_span": {
+    "name": "rag.retrieve",
+    "latency_ms": 2500,
+    "share_of_request_pct": 61.0,
+    "attributes": {
+      "rag_slow": true,
+      "doc_count": 1,
+      "feature": "refund"
+    }
+  },
+  "conclusion": "rag.retrieve is the abnormal span and localizes the challenge latency to retrieval."
+}

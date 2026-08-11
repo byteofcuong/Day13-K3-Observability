@@ -2,26 +2,36 @@
   {
     "step": "A3 baseline (v1)",
     "label": "baseline",
-    "correlation_id": "req-03d0388d"
+    "correlation_id": "req-9fb39b65",
+    "trace_id": "ee1f7a286279b88ca3f7a61987939506",
+    "prompt_version": 1
   },
   {
     "step": "A3 candidate (v2)",
     "label": "candidate",
-    "correlation_id": "req-08a4edb3"
+    "correlation_id": "req-399627f1",
+    "trace_id": "8a541dda6a51b8cc3abf0252f67f2653",
+    "prompt_version": 2
   },
   {
     "step": "A4 truoc doi label",
     "label": "production",
-    "correlation_id": "req-c95d8984"
+    "correlation_id": "req-a9d252ff",
+    "trace_id": "00b711fb6adf09ca830ae86c4a4813b3",
+    "prompt_version": 1
   },
   {
     "step": "A4 sau khi chuyen production->v2",
     "label": "production",
-    "correlation_id": "req-7d177215"
+    "correlation_id": "req-71a9135b",
+    "trace_id": "9a2047e33a086e950aad63d2fc6e0771",
+    "prompt_version": 2
   },
   {
     "step": "A4 sau khi rollback ->v1",
     "label": "production",
-    "correlation_id": "req-ff35072f"
+    "correlation_id": "req-ab69a2f7",
+    "trace_id": "07ca01e928b417867757b996385ac8e9",
+    "prompt_version": 1
   }
 ]

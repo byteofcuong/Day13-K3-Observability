@@ -1,0 +1,22 @@
+{
+  "project": "Day13-K3-Observability",
+  "prompt_name": "day13-chat",
+  "versions": [
+    {
+      "version": 1,
+      "labels_after_rollback": ["baseline", "production"]
+    },
+    {
+      "version": 2,
+      "labels_after_rollback": ["candidate", "latest"]
+    }
+  ],
+  "trace_runs": [
+    {"step": "baseline", "label": "baseline", "version": 1, "trace_id": "ee1f7a286279b88ca3f7a61987939506", "correlation_id": "req-9fb39b65"},
+    {"step": "candidate", "label": "candidate", "version": 2, "trace_id": "8a541dda6a51b8cc3abf0252f67f2653", "correlation_id": "req-399627f1"},
+    {"step": "production_before", "label": "production", "version": 1, "trace_id": "00b711fb6adf09ca830ae86c4a4813b3", "correlation_id": "req-a9d252ff"},
+    {"step": "production_switched", "label": "production", "version": 2, "trace_id": "9a2047e33a086e950aad63d2fc6e0771", "correlation_id": "req-71a9135b"},
+    {"step": "production_rollback", "label": "production", "version": 1, "trace_id": "07ca01e928b417867757b996385ac8e9", "correlation_id": "req-ab69a2f7"}
+  ],
+  "final_state": "production points to version 1"
+}

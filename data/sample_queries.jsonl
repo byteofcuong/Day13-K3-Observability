@@ -8,3 +8,13 @@
 {"user_id":"u08","session_id":"s08","feature":"qa","message":"How do I debug tail latency?"}
 {"user_id":"u09","session_id":"s09","feature":"qa","message":"What is the policy for PII and credit card 4111 1111 1111 1111?"}
 {"user_id":"u10","session_id":"s10","feature":"qa","message":"How should alerts be designed?"}
+{"user_id":"u11","session_id":"s11","feature":"qa","message":"What is your refund policy? My email is student@vinuni.edu.vn"}
+{"user_id":"u12","session_id":"s12","feature":"qa","message":"Explain why metrics traces and logs work together"}
+{"user_id":"u13","session_id":"s13","feature":"summary","message":"Summarize the monitoring policy for production logging"}
+{"user_id":"u14","session_id":"s14","feature":"qa","message":"Can I get help with policy and monitoring?"}
+{"user_id":"u15","session_id":"s15","feature":"qa","message":"Here is my phone 0987654321, what should be logged?"}
+{"user_id":"u16","session_id":"s16","feature":"summary","message":"Give me a short summary of the observability workflow"}
+{"user_id":"u17","session_id":"s17","feature":"qa","message":"What should not appear in app logs?"}
+{"user_id":"u18","session_id":"s18","feature":"qa","message":"How do I debug tail latency?"}
+{"user_id":"u19","session_id":"s19","feature":"qa","message":"What is the policy for PII and credit card 4111 1111 1111 1111?"}
+{"user_id":"u20","session_id":"s20","feature":"qa","message":"How should alerts be designed?"}

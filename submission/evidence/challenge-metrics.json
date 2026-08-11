@@ -1,0 +1,23 @@
+{
+  "challenge_id": "day13-k3-observability-v1",
+  "affected_feature": "refund",
+  "latency_threshold_ms": 2000,
+  "official_command": "python scripts/load_test.py --challenge --concurrency 5",
+  "before_incident": {
+    "traffic": 35,
+    "latency_p95_ms": 1680
+  },
+  "incident_run": {
+    "traffic": 40,
+    "latency_p95_ms": 2995,
+    "threshold_breached": true,
+    "excess_ms": 995,
+    "http_successes": 5,
+    "http_errors": 0
+  },
+  "mitigation": "python scripts/inject_incident.py --disable",
+  "post_mitigation_challenge_request_latencies_ms": [1458, 1603, 1593, 533, 1571],
+  "post_mitigation_subset_p95_ms": 1603,
+  "post_mitigation_threshold_breached": false,
+  "note": "The process-wide cumulative p95 remained 2995 ms because /metrics retains pre-fix incident samples; the fresh five-request subset is used to verify recovery."
+}
