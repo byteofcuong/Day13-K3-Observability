@@ -1,19 +1,29 @@
+# Ba alert bám đúng SLI trong config/slo.yaml và threshold trong config/dashboard.yaml.
+# Mỗi alert mô tả triệu chứng người dùng hoặc SLO bị phá, không đặt tên theo hàm
+# nội bộ — vì khi bị đánh thức lúc 3h sáng, cái cần biết là "người dùng đang chịu
+# gì", không phải "hàm nào đang chạy".
+#
+# Cả ba đều có "for" (thời gian duy trì) để một spike lẻ không tạo page giả.
+# Ba alert này cũng phủ đúng ba incident practice trong app/incidents.py:
+#   rag_slow -> alert 1 | tool_fail -> alert 2 | cost_spike -> alert 3
 alerts:
-  - name: TODO_alert_1
-    severity: TODO
-    condition: TODO
+  - name: ChatResponseTooSlow
+    severity: P2-high
+    condition: p95(response_sent.latency_ms) > 3000 for 10m
     type: symptom-based
-    owner: TODO
+    owner: Tracing & Prompt Version
     runbook: docs/alerts.md#alert-1
-  - name: TODO_alert_2
-    severity: TODO
-    condition: TODO
+
+  - name: ChatRequestsFailing
+    severity: P1-critical
+    condition: count(request_failed) / count(request_received) > 2% for 5m AND count(request_received) >= 20
     type: symptom-based
-    owner: TODO
+    owner: Incident, Report & Demo
     runbook: docs/alerts.md#alert-2
-  - name: TODO_alert_3
-    severity: TODO
-    condition: TODO
+
+  - name: DailyCostBudgetBurn
+    severity: P3-medium
+    condition: sum(response_sent.cost_usd) over 24h > 2.5 USD
     type: symptom-based
-    owner: TODO
+    owner: Dashboard, SLO & Alert
     runbook: docs/alerts.md#alert-3

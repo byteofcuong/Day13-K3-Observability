@@ -8,7 +8,15 @@ from .mock_llm import FakeLLM
 from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
-from .tracing import get_langfuse_client, observe, tracing_enabled
+from .tracing import (
+    child_generation,
+    child_span,
+    get_langfuse_client,
+    observe,
+    score_current_trace,
+    tracing_enabled,
+    update_current_span,
+)
 
 from structlog.contextvars import get_contextvars
 
@@ -28,11 +36,24 @@ class LabAgent:
         self.model = model
         self.llm = FakeLLM(model=model)
 
-    @observe(as_type="generation", capture_input=False, capture_output=False)
+    # Root observation là span chứ không phải generation: một lượt chat gồm cả
+    # bước retrieval lẫn lời gọi LLM, nên retrieval phải là span anh em của
+    # generation thay vì nằm lồng bên trong nó.
+    @observe(name="chat-response", capture_input=False, capture_output=False)
     def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
         started = time.perf_counter()
-        docs = retrieve(message)
         langfuse_client = get_langfuse_client()
+        question_preview = summarize_text(message)
+
+        with child_span(
+            langfuse_client,
+            name="retrieve-context",
+            input={"question": question_preview},
+        ) as retrieval:
+            docs = retrieve(message)
+            if retrieval is not None:
+                retrieval.update(output={"doc_count": len(docs), "docs": docs})
+
         prompt = resolve_prompt(
             langfuse_client,
             feature=feature,
@@ -40,11 +61,43 @@ class LabAgent:
             message=message,
             enabled=tracing_enabled(),
         )
-        response = self.llm.generate(prompt.text)
+
+        with child_generation(
+            langfuse_client,
+            name="llm-answer",
+            model=self.model,
+            input={"question": question_preview, "doc_count": len(docs)},
+        ):
+            response = self.llm.generate(prompt.text)
+            cost_usd = self._estimate_cost(
+                response.usage.input_tokens, response.usage.output_tokens
+            )
+            langfuse_client.update_current_generation(
+                model=self.model,
+                output=summarize_text(response.text),
+                metadata={
+                    "doc_count": len(docs),
+                    "query_preview": question_preview,
+                    "prompt_name": prompt.name,
+                    "prompt_label": prompt.label,
+                    "prompt_version": prompt.version,
+                    "prompt_source": prompt.source,
+                    "prompt_fetch_error": prompt.fetch_error,
+                },
+                usage_details={
+                    "prompt_tokens": response.usage.input_tokens,
+                    "completion_tokens": response.usage.output_tokens,
+                },
+                cost_details={"total": cost_usd},
+                prompt=prompt.managed_prompt,
+            )
+
         quality_score = self._heuristic_quality(message, response.text, docs)
         latency_ms = int((time.perf_counter() - started) * 1000)
-        cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
 
+        # correlation_id đến từ middleware qua contextvars. Đây là mắt xích nối
+        # trace trên Langfuse với log line trong data/logs.jsonl — thiếu nó thì
+        # luồng Metrics → Traces → Logs bị đứt ở đoạn cuối.
         metadata = {
             "prompt_name": prompt.name,
             "prompt_label": prompt.label,
@@ -55,29 +108,28 @@ class LabAgent:
         if cid and cid != "MISSING":
             metadata["correlation_id"] = cid
 
+        # Root observation cũng cần input/output riêng: giá trị đặt ở cấp trace
+        # không tự chảy xuống observation, mà dashboard/evaluator đọc ở đây.
+        update_current_span(
+            langfuse_client,
+            input={"question": question_preview},
+            output={"answer": summarize_text(response.text)},
+        )
         langfuse_client.update_current_trace(
+            name="chat-response",
             user_id=hash_user_id(user_id),
             session_id=session_id,
             tags=["lab", feature, self.model],
+            input={"question": question_preview},
+            output={"answer": summarize_text(response.text)},
             metadata=metadata,
         )
-        langfuse_client.update_current_generation(
-            model=self.model,
-            metadata={
-                "doc_count": len(docs),
-                "query_preview": summarize_text(message),
-                "prompt_name": prompt.name,
-                "prompt_label": prompt.label,
-                "prompt_version": prompt.version,
-                "prompt_source": prompt.source,
-                "prompt_fetch_error": prompt.fetch_error,
-            },
-            usage_details={
-                "prompt_tokens": response.usage.input_tokens,
-                "completion_tokens": response.usage.output_tokens,
-            },
-            cost_details={"total": cost_usd},
-            prompt=prompt.managed_prompt,
+        score_current_trace(
+            langfuse_client,
+            name="quality_proxy",
+            value=quality_score,
+            data_type="NUMERIC",
+            comment="Heuristic quality proxy của lab, không phải đánh giá của người dùng",
         )
 
         metrics.record_request(
