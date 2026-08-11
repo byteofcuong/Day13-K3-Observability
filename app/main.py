@@ -7,6 +7,9 @@ from fastapi.responses import JSONResponse
 from structlog.contextvars import bind_contextvars
 
 from .agent import LabAgent
+from .audit import write_audit_event
+from .cost_optimization import configure as configure_cost_optimization
+from .cost_optimization import status as cost_optimization_status
 from .incidents import disable, enable, status
 from .logging_config import configure_logging, get_logger
 from .metrics import record_error, snapshot
@@ -52,7 +55,12 @@ async def shutdown() -> None:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"ok": True, "tracing_enabled": tracing_enabled(), "incidents": status()}
+    return {
+        "ok": True,
+        "tracing_enabled": tracing_enabled(),
+        "incidents": status(),
+        "cost_optimization": cost_optimization_status(),
+    }
 
 
 @app.get("/metrics")
@@ -116,7 +124,11 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
 @app.post("/incidents/{name}/enable")
 async def enable_incident(name: str) -> JSONResponse:
     try:
+        before = status()
         enable(name)
+        write_audit_event(
+            action="incident.enable", target=name, before=before, after=status()
+        )
         log.warning("incident_enabled", service="control", payload={"name": name})
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
@@ -126,8 +138,35 @@ async def enable_incident(name: str) -> JSONResponse:
 @app.post("/incidents/{name}/disable")
 async def disable_incident(name: str) -> JSONResponse:
     try:
+        before = status()
         disable(name)
+        write_audit_event(
+            action="incident.disable", target=name, before=before, after=status()
+        )
         log.warning("incident_disabled", service="control", payload={"name": name})
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/config/cost-optimization")
+async def update_cost_optimization(enabled: bool, max_output_tokens: int = 160) -> JSONResponse:
+    before = cost_optimization_status()
+    try:
+        after = configure_cost_optimization(
+            enabled=enabled, max_output_tokens=max_output_tokens
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    write_audit_event(
+        action="config.change",
+        target="cost_optimization",
+        before=before,
+        after=after,
+    )
+    log.info(
+        "cost_optimization_config_changed",
+        service="control",
+        payload=after,
+    )
+    return JSONResponse({"ok": True, "cost_optimization": after})

@@ -1,0 +1,72 @@
+{
+  "generated_at": "2026-08-11T16:52:12.136962+00:00",
+  "scenario": "cost_spike",
+  "optimization": {
+    "strategy": "max_output_tokens",
+    "limit": 160
+  },
+  "before": {
+    "requests": 10,
+    "total_cost_usd": 0.0817,
+    "tokens_out_total": 5388,
+    "metrics_before": {
+      "traffic": 0,
+      "latency_p50": 0.0,
+      "latency_p95": 0.0,
+      "latency_p99": 0.0,
+      "avg_cost_usd": 0.0,
+      "total_cost_usd": 0,
+      "tokens_in_total": 0,
+      "tokens_out_total": 0,
+      "errors_rate_pct": 0.0,
+      "error_breakdown": {},
+      "quality_avg": 0.0
+    },
+    "metrics_after": {
+      "traffic": 10,
+      "latency_p50": 152.0,
+      "latency_p95": 157.0,
+      "latency_p99": 157.0,
+      "avg_cost_usd": 0.0082,
+      "total_cost_usd": 0.0817,
+      "tokens_in_total": 290,
+      "tokens_out_total": 5388,
+      "errors_rate_pct": 0.0,
+      "error_breakdown": {},
+      "quality_avg": 0.8
+    }
+  },
+  "after": {
+    "requests": 10,
+    "total_cost_usd": 0.0249,
+    "tokens_out_total": 1600,
+    "metrics_before": {
+      "traffic": 10,
+      "latency_p50": 152.0,
+      "latency_p95": 157.0,
+      "latency_p99": 157.0,
+      "avg_cost_usd": 0.0082,
+      "total_cost_usd": 0.0817,
+      "tokens_in_total": 290,
+      "tokens_out_total": 5388,
+      "errors_rate_pct": 0.0,
+      "error_breakdown": {},
+      "quality_avg": 0.8
+    },
+    "metrics_after": {
+      "traffic": 20,
+      "latency_p50": 151.0,
+      "latency_p95": 160.0,
+      "latency_p99": 160.0,
+      "avg_cost_usd": 0.0053,
+      "total_cost_usd": 0.1066,
+      "tokens_in_total": 580,
+      "tokens_out_total": 6988,
+      "errors_rate_pct": 0.0,
+      "error_breakdown": {},
+      "quality_avg": 0.8
+    }
+  },
+  "cost_saving_usd": 0.0568,
+  "cost_saving_pct": 69.52
+}

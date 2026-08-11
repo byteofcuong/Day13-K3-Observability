@@ -86,3 +86,19 @@ Cả 5 trace đều có `prompt_source = langfuse`, không phải `local-fallbac
 | Nguyễn Hoàng Việt | Chủ trì CP3; điều tra Metrics → Traces → Logs; fix và preventive measure | [commit 55e10dc](https://github.com/byteofcuong/Day13-K3-Observability/commit/697df60a52866ed656a2b816497a5b1f403cdad2) | Correlation ID nối trace với log; phải dùng ngưỡng 2000ms và lọc `feature=refund` của challenge. |
 | Nguyễn Đông Hùng | Khởi tạo app, PII redaction, prompt/tracing và challenge config | [commit f1a02e5](https://github.com/viett207/Day13-K3-Observability/commit/f1a02e5087e90e9105261402f369be523e75404b), [commit 7a57bfb](https://github.com/viett207/Day13-K3-Observability/commit/7a57bfb239f83d8246c1264d0b08f95d3d22b5d2) | Trace cần metadata/version; PII phải được chặn ở cả log và exporter. |
 | Mai Quốc Hiếu | Middleware, correlation ID, log metadata, PII scrubbing và metrics calculation | [commit 6c9be68](https://github.com/byteofcuong/Day13-K3-Observability/commit/6c9be6876459986c0eb5c8c3683ed8ac38e71ea0) | Correlation ID phải được truyền xuyên suốt request/response; metadata cần nhất quán và PII phải được redact trước khi ghi log. |
+
+## 8. Bonus — Tối ưu chi phí và Audit Log
+
+- **Cost Optimization:** ứng dụng hỗ trợ giới hạn output token có thể cấu hình
+  runtime qua `POST /config/cost-optimization`. Script
+  `scripts/run_bonus_evidence.py` bật `cost_spike`, chạy cùng 10 request trước và
+  sau khi áp dụng giới hạn 160 token, rồi lưu chi phí và token delta tại
+  [evidence/bonus-cost-before-after.json](evidence/bonus-cost-before-after.json).
+- **Audit Log:** `data/audit.jsonl` là log append-only riêng, chỉ ghi các thay đổi
+  quan trọng gồm bật/tắt incident và đổi cấu hình tối ưu. Mỗi record có `ts`,
+  `action`, `target`, `actor`, `correlation_id`, `env`, `before` và `after`; dữ
+  liệu chuỗi được PII scrub trước khi ghi.
+- **Evidence audit:** [evidence/bonus-audit-sample.jsonl](evidence/bonus-audit-sample.jsonl)
+  ghi lại một chuỗi đầy đủ gồm bật incident, đổi config và tắt incident.
+- **Kiểm chứng:** `python -m pytest tests/test_bonus.py -q`; quy trình tạo evidence
+  và lệnh kiểm tra audit nằm trong `docs/BONUS.md`.

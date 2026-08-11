@@ -20,6 +20,8 @@ Trong lab 4 giờ này, bạn sẽ biến một API AI chạy được nhưng kh
 5. Điều tra challenge chính thức sau khi Lab Coach release `config/challenge.json`.
 6. Hoàn thiện `submission/REPORT.md` và lưu bằng chứng trong `submission/evidence/`.
 
+Phần bonus Cost Optimization và Audit Log được mô tả tại [docs/BONUS.md](docs/BONUS.md).
+
 ## Luồng làm bài bắt buộc
 
 | Mốc | Làm gì | Tự kiểm tra | Evidence |

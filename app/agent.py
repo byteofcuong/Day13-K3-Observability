@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 
 from . import metrics
+from .cost_optimization import output_token_limit
 from .mock_llm import FakeLLM
 from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
@@ -68,7 +69,10 @@ class LabAgent:
             model=self.model,
             input={"question": question_preview, "doc_count": len(docs)},
         ):
-            response = self.llm.generate(prompt.text)
+            response = self.llm.generate(
+                prompt.text,
+                max_output_tokens=output_token_limit(),
+            )
             cost_usd = self._estimate_cost(
                 response.usage.input_tokens, response.usage.output_tokens
             )
