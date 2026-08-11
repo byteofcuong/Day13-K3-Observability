@@ -1,7 +1,5 @@
 # Báo cáo Day 13 Observability
 
-> Các mục đánh dấu `<TODO nhóm>` cần điền trước khi nộp. Phần còn lại đã có bằng chứng kiểm chứng được.
-
 ## 1. Thông tin nhóm
 
 - Tên nhóm: `<TODO nhóm>`
@@ -11,15 +9,15 @@
 
 ## 2. Kết quả kỹ thuật
 
-- Điểm `validate_logs.py`: **100/100** — 0 record thiếu field bắt buộc, 0 record thiếu enrichment, 34 correlation ID duy nhất.
+- Điểm `validate_logs.py`: **100/100** — 0 record thiếu field bắt buộc, 0 record thiếu enrichment, 34 correlation ID duy nhất. Output đầy đủ: [evidence/01_validate_logs_output.txt](evidence/01_validate_logs_output.txt).
 - Tổng số traces: **40** trên Langfuse (yêu cầu tối thiểu 10).
 - Số PII leak còn lại: **0** — kiểm ở hai tầng, `validate_logs.py` cho log và mask hook của Langfuse SDK cho trace.
 - Link/đường dẫn dashboard: `streamlit run dashboard/app.py` → http://localhost:8501 (mã nguồn tại `dashboard/app.py`).
 
 ## 3. Logging và tracing
 
-- **Evidence correlation ID:** `data/logs.jsonl`, mọi `request_received`/`response_sent` đều có `correlation_id` dạng `req-xxxxxxxx`. Middleware nhận `x-request-id` từ header nếu có, nếu không thì tự sinh, và trả lại qua header `x-request-id` cùng `x-response-time-ms`.
-- **Evidence PII redaction:** trace `f861411d48c24c6d9c1517d32cee563a` có input `{"question": "What is the policy for PII and credit card [REDACTED_CREDIT_CARD]?"}`. Trong log, `payload.message_preview` của cùng request cũng đã redact.
+- **Evidence correlation ID:** [evidence/06_log_correlation_id.jsonl](evidence/06_log_correlation_id.jsonl) — cặp `request_received`/`response_sent` của cùng `req-1c763513`, đủ metadata `user_id_hash`, `session_id`, `feature`, `model`, `env`. Middleware nhận `x-request-id` từ header nếu có, nếu không thì tự sinh, và trả lại qua header `x-request-id` cùng `x-response-time-ms`.
+- **Evidence PII redaction:** [evidence/07_log_pii_redacted.jsonl](evidence/07_log_pii_redacted.jsonl) — các dòng log chứa `[REDACTED_EMAIL]`, `[REDACTED_PHONE_VN]`, `[REDACTED_CREDIT_CARD]`. Ở phía trace, `f861411d48c24c6d9c1517d32cee563a` có input `{"question": "What is the policy for PII and credit card [REDACTED_CREDIT_CARD]?"}` — chứng minh mask chặn ở cả hai tầng.
 - **Evidence trace waterfall:** trace `130a1c3e9726b8bece16c91163cc842c` — 3 observation lồng nhau:
 
 ```text
@@ -54,7 +52,7 @@ Cả 5 trace đều có `prompt_source = langfuse`, không phải `local-fallbac
 
 ## 5. Dashboard, SLO và alerts
 
-- **Kết quả `validate_dashboard.py`:** `HỢP LỆ: 6/6 panel có trong dashboard contract.`
+- **Kết quả `validate_dashboard.py`:** `HỢP LỆ: 6/6 panel có trong dashboard contract.` Output: [evidence/08_validate_dashboard_output.txt](evidence/08_validate_dashboard_output.txt).
 - **Evidence dashboard:** `dashboard/app.py` (Streamlit). Panel không hard-code — tiêu đề, đơn vị, phép tổng hợp và threshold đọc trực tiếp từ `config/dashboard.yaml`, nên dashboard và validator không thể lệch nhau. Percentile dùng lại đúng hàm `app.metrics.percentile` của API để dashboard khớp với `/metrics`. `<TODO nhóm: chụp ảnh dashboard vào submission/evidence/>`
 - **SLO đã chọn và lý do:** 4 SLI trong `config/slo.yaml`, mỗi cái có `rationale` giải thích con số. Điểm chính: latency p95 3000ms để target 99.0 chứ không phải 99.5 vì lab chạy trên máy cá nhân và một lần load test cũng đủ đẩy p95 lên; `daily_cost_usd` để target 98.0 vì cost là chỉ tiêu ngân sách chứ không phải cam kết với người dùng; `quality_score_avg` lỏng nhất vì nó là proxy heuristic.
 - **Alert rules và runbook:** 3 alert trong `config/alert_rules.yaml`, runbook đầy đủ 8 field trong `docs/alerts.md`. Cả ba đều symptom-based và có thời gian duy trì:
