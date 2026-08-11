@@ -11,19 +11,19 @@ alerts:
     severity: P2-high
     condition: p95(response_sent.latency_ms) > 3000 for 10m
     type: symptom-based
-    owner: Tracing & Prompt Version
+    owner: "Nguyễn Phú Cường (Metrics & Alerting)"
     runbook: docs/alerts.md#alert-1
 
   - name: ChatRequestsFailing
     severity: P1-critical
     condition: count(request_failed) / count(request_received) > 2% for 5m AND count(request_received) >= 20
     type: symptom-based
-    owner: Incident, Report & Demo
+    owner: "Nguyễn Hoàng Việt (QA & Incident Analyst)"
     runbook: docs/alerts.md#alert-2
 
   - name: DailyCostBudgetBurn
     severity: P3-medium
     condition: sum(response_sent.cost_usd) over 24h > 2.5 USD
     type: symptom-based
-    owner: Dashboard, SLO & Alert
+    owner: "Nguyễn Phú Cường (Metrics & Alerting)"
     runbook: docs/alerts.md#alert-3
